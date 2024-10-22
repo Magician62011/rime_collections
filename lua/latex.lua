@@ -33,7 +33,7 @@ local function wildcard_limited_filter(input, env)
 		--if prefix~=nil and input_string:sub(1,prefix_len) == prefix then input_string = input_string:sub(1+prefix_len) end
 		if suffix~=nil and input_string:sub(-1,-suffix_len) == suffix then input_string = input_string:sub(1,-(1+suffix_len)) end
 		log_error("input_string_new: "..input_string)
-		local pattern = input_string:gsub(wildcard, ".*")	--create pattern that repalce custom wildcard to lua wildcard ".*"
+		local pattern = input_string:gsub(wildcard, ".*"):gsub("([%-%+%[%]%(%)])", "%%%1")	--create pattern that repalce custom wildcard to lua wildcard ".*"
 		log_error("pattern: "..pattern)
 		local newcand = {start = context:get_preedit().sel_start, _end = context:get_preedit().sel_end}
 		
@@ -104,7 +104,8 @@ local function fuzzy_search_filter(input, env)
 			--if prefix~=nil and input_string:sub(1,prefix_len) == prefix then input_string = input_string:sub(1+prefix_len) end
 			if suffix~=nil and input_string:sub(-1,-suffix_len) == suffix then input_string = input_string:sub(1,-(1+suffix_len)) end
 			log_error("input_string_new: "..input_string)
-			local pattern = input_string:gsub(".", "%0.*")	--e.g. \abc -> \.*a.*b.*c.*
+			--local pattern = input_string:gsub(".", "%0.*")	--e.g. \abc -> \.*a.*b.*c.*
+			local pattern = input_string:gsub(".", "%0.*"):gsub("([%-%+%[%]%(%)])", "%%%1") -- escaping special characters
 			log_error("pattern: "..pattern)
 			-- return candidates that match the pattern
 			for _, cand in pairs(cands) do
@@ -160,8 +161,8 @@ local function wildcard_search_filter(input, env)
 			--if prefix~=nil and input_string:sub(1,prefix_len) == prefix then input_string = input_string:sub(1+prefix_len) end
 			if suffix~=nil and input_string:sub(-1,-suffix_len) == suffix then input_string = input_string:sub(1,-(1+suffix_len)) end
 			log_error("input_string_new: "..input_string)
-			-- local pattern = input_string:gsub(".", "%0.*")	--e.g. \abc -> \.*a.*b.*c.*
-			local pattern = input_string:gsub(wildcard, ".*")	-- e.g. \*ab*c -> \.*ab.*c.*
+			-- local pattern = input_string:gsub(wildcard, ".*")	-- e.g. \*ab*c -> \.*ab.*c.*
+			local pattern = input_string:gsub(wildcard, ".*"):gsub("([%-%+%[%]%(%)])", "%%%1") -- escaping special characters
 			log_error("pattern: "..pattern)
 			-- return candidates that match the pattern
 			for _, cand in pairs(cands) do
@@ -219,6 +220,6 @@ latex_reverse_lookup:
   
 recognizer:
   patterns: 
-    latex: "^\\\\[a-zA-Z0-9^_*]*'?$"    # *代表任意次 \会直接识别出tag 
+    latex: "^\\\\[<>a-zA-Z0-9^_*()\\[\\]+-]*'?$" 
   
 ]]--
